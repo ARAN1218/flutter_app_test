@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'dart:math' as math;
-import 'content.dart';
+import 'dungeon.dart';
 import 'player.dart';
+import 'content.dart';
 var random = math.Random();
+final _audio = AudioCache();
 final GOAL = -999;
 
 void main() {
@@ -16,24 +19,109 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Pigeon Dungeon',
+      title: 'Dungeon Creators',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Dungeon Creators'),
+      home: const MyHomePage(title: 'Dungeon Creators', level: 1,),
     );
   }
 }
 
+// ホームのページ
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title, required this.level});
   final String title;
+  final int level;
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<MyHomePage> createState() => MyHomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomeState extends State<MyHomePage> {
+  @override
+  Widget build(BuildContext context) {
+    final Size size = MediaQuery.of(context).size;
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.title),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Spacer(),  // レスポンシブな空白
+
+            Text(
+              "Dungeon Creators",
+              style: TextStyle(fontSize: 30),
+            ),
+
+            Spacer(),  // レスポンシブな空白
+
+            TextButton(
+              child: Text(
+                "初級ダンジョン",
+                style: TextStyle(fontSize: 20),
+              ),
+              onPressed: (){
+                _audio.play('select.mp3');
+                // （1） 指定した画面に遷移する
+                Navigator.push(context, MaterialPageRoute(
+                  // （2） 実際に表示するページ(ウィジェット)を指定する
+                    builder: (context) => MyDungeonPage(title: 'Dungeon Creators', level: 10,)
+                ));
+              },
+            ),
+            TextButton(
+              child: Text(
+                "中級ダンジョン",
+                style: TextStyle(fontSize: 20),
+              ),
+              onPressed: (){
+                _audio.play('select.mp3');
+                // （1） 指定した画面に遷移する
+                Navigator.push(context, MaterialPageRoute(
+                  // （2） 実際に表示するページ(ウィジェット)を指定する
+                    builder: (context) => MyDungeonPage(title: 'Dungeon Creators', level: 20,)
+                ));
+              },
+            ),
+            TextButton(
+              child: Text(
+                  "上級ダンジョン",
+                  style: TextStyle(fontSize: 20),
+              ),
+              onPressed: (){
+                _audio.play('select.mp3');
+                // （1） 指定した画面に遷移する
+                Navigator.push(context, MaterialPageRoute(
+                  // （2） 実際に表示するページ(ウィジェット)を指定する
+                    builder: (context) => MyDungeonPage(title: 'Dungeon Creators', level: 30,)
+                ));
+              },
+            ),
+
+            Spacer(),  // レスポンシブな空白
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+// ダンジョンのページ
+class MyDungeonPage extends StatefulWidget {
+  const MyDungeonPage({super.key, required this.title, required this.level});
+  final String title;
+  final int level;
+
+  @override
+  State<MyDungeonPage> createState() => DungeonState();
+}
+
+class DungeonState extends State<MyDungeonPage> {
   int _FloorText = 1;
   int _TurnText = 0;
   int score = 0;
@@ -60,7 +148,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _search(int i, int j, int target) {
+    _audio.play('search.mp3');
     _TurnText++;
+    dungeon.timer_update();
     setState(() {
       dungeon.search(i, j, target);
     });
@@ -68,13 +158,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _proceedDungeon(int i, int j) {
     setState(() {
-      if(dungeon.content[i][j].content is Item && dungeon.content[i][j].content.status["type"] != 0) {
-        dungeon.get(i, j);
-      } else if(dungeon.content[i][j].content == GOAL) {
-        _FloorText++;
-        _TurnText = 0;
-        dungeon.proceedDungeon();
-      }
+      _FloorText++;
+      _TurnText = 0;
+      dungeon.proceedDungeon();
     });
   }
 
@@ -90,19 +176,25 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
+    int _MaxFloorText = widget.level;
     return Scaffold(
       // appBar: AppBar(
       //   title: Text(widget.title),
       //   toolbarHeight: 30,
       // ),
       body: Center(
+        // child: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          // mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             SizedBox( // ここから勝手に入れた
               width: size.width,//dungeon.dungeon_length * 30.0,
               height: size.height/6,
-              child: status() // ステータスメニュー
+              child: status(
+                dungeon.player.status["HP"]!,
+                dungeon.player.status["attack"]!,
+                dungeon.player.status["defence"]!,
+              ) // ステータスメニュー
             ),
 
             Spacer(),  // レスポンシブな空白
@@ -127,16 +219,66 @@ class _MyHomePageState extends State<MyHomePage> {
             Spacer(),  // レスポンシブな空白
 
             SizedBox(
-              // width: 5,
-              // height: 5,
-              child: TextButton(
-                // color: Colors.blue,
-                style: TextButton.styleFrom(
-                  fixedSize: Size(5, 5),
-                ),
-                child: Text('クリア'),
-                onPressed: _clearDungeon,
-              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                    Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: <Widget>[
+                          Row(
+                            children: <Widget>[
+                              Text(
+                                'Floor: $_FloorText / $_MaxFloorText',
+                              ),
+                            ]
+                          ),
+                          Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                'Turn: $_TurnText',
+                              ),
+                            ]
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                'score: '+dungeon.score.toString(),
+                              ),
+                            ],
+                          )
+                        ]
+                    ),
+                  Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            fixedSize: Size(5, 5),
+                          ),
+                          child: Text('clear'),
+                          onPressed: _clearDungeon,
+                        ),
+                      ]
+                  ),
+                  Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: <Widget>[
+                        TextButton(
+                          style: TextButton.styleFrom(
+                            fixedSize: Size(5, 5),
+                          ),
+                          child: Text('menu'),
+                          onPressed: () async{
+                            _audio.play('menu.mp3');
+                            await dungeon_menu(context);
+                          },
+                        ),
+                      ]
+                  )
+                ],
+              )
             ),
 
             Spacer(),  // レスポンシブな空白
@@ -161,12 +303,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
+        // ),
       ),
     );
   }
 
   // ステータスメニュー
-  Container status() =>
+  Container status(int HP, int atk, int def) =>
     Container(
       color: Colors.lightGreenAccent,
       child: Row(
@@ -190,7 +333,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Text(
-                'Floor: $_FloorText / 10',
+                'HP: $HP',
                 style: TextStyle(fontSize: 18),
               ),
             ],
@@ -199,7 +342,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Text(
-                'Turn: $_TurnText',
+                'ATK: $atk',
                 style: TextStyle(fontSize: 18),
               ),
             ],
@@ -208,7 +351,7 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Text(
-                'score: '+dungeon.score.toString(),
+                'DEF: $def',
                 style: TextStyle(fontSize: 18),
               ),
             ],
@@ -281,6 +424,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         onTap: () {
           print("一回タップで反応したよ");
+          _audio.play('equip.mp3');
           setState(() {dungeon.player.exit_equipments(type);});
         },
       );
@@ -301,6 +445,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     },
     onAccept: (data) {
+      _audio.play('equip.mp3');
       setState(() {dungeon.player.equip_equipments(type, data);});
     },
   );
@@ -314,21 +459,33 @@ class _MyHomePageState extends State<MyHomePage> {
             dungeon.dungeon[i][j] != -1
                 ? ""
                 : dungeon.content[i][j].show(),
-            style: TextStyle(fontSize: 15),
+            style: TextStyle(fontSize: 12),
           ),
           color: _changeCellColor(i, j),
           height: MediaQuery.of(context).size.width/10,
           // width: MediaQuery.of(context).size.width/20
         ),
         // タップされた時、2次元配列の対応するindexにbool値を反転させる
-        onTap: () =>
-            setState(() =>
-              dungeon.dungeon[i][j] != -1
-                  ? _search(i, j, dungeon.dungeon[i][j])
-                  : dungeon.content[i][j].type == "monster"
-                    ? dungeon.content[i][j].content.damage(dungeon, [i,j], dungeon.player.status["attack"])
-                    : _proceedDungeon(i, j)
-            ),
+          onTap: () {
+            setState(() {
+              if (dungeon.dungeon[i][j] != -1) { // パネルを外してない時
+                _search(i, j, dungeon.dungeon[i][j]);
+              } else
+              if (dungeon.content[i][j].type == "monster") { // モンスターにタップした時
+                _audio.play('attack.mp3');
+                dungeon.content[i][j].content.damage(dungeon, [i, j], dungeon.player.status["attack"]);
+                dungeon.timer_update();
+              } else if (dungeon.content[i][j].content is Item && dungeon.content[i][j].content.status["type"] != 0) {
+                _audio.play('drop.mp3');
+                dungeon.get(i, j);
+              } else if (dungeon.content[i][j].content == GOAL && widget.level == _FloorText) {
+                _audio.play('dungeon_clear.mp3');
+                dungeon_clear(context);
+              } else if (dungeon.content[i][j].content == GOAL) { // ゴールの時
+                _proceedDungeon(i, j);
+              }
+            });
+        }
       );
     },
     onAccept: (data) {
@@ -337,6 +494,7 @@ class _MyHomePageState extends State<MyHomePage> {
         print(data);
         print([i, j]);
         setState(() {
+          _audio.play('drop.mp3');
           dungeon.player.drop(dungeon, data, [i, j]);
         });
       }
@@ -372,14 +530,23 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           )
       ),
+        onTapDown: (details) { // 選択音
+          _audio.play('select.mp3');
+        },
         onDoubleTap: () {
             print("二回タップされたよ");
             if(dungeon.player.pouch[i][j].status["type"] == 100) { // 武器
+              _audio.play('equip.mp3');
               setState(() {dungeon.player.equip_equipments("weapon", [i,j]);});
             } else if (dungeon.player.pouch[i][j].status["type"] == 110) { // 頭装備
+              _audio.play('equip.mp3');
               setState(() {dungeon.player.equip_equipments("head", [i,j]);});
             } else if (dungeon.player.pouch[i][j].status["type"] == 111) { // 体装備
+              _audio.play('equip.mp3');
               setState(() {dungeon.player.equip_equipments("body", [i,j]);});
+            } else if (dungeon.player.pouch[i][j].status["type"] == 300) { // 回復アイテム
+              _audio.play('cure.mp3');
+              setState(() {dungeon.player.pouch[i][j].cure(dungeon, [i,j]);});
             }
         },
       );
@@ -422,5 +589,76 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.lightGreenAccent,
       ),
     );
+  }
+
+  // ダンジョンメニュー
+  Future<bool?> dungeon_menu(BuildContext context) async {
+    bool? res = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+              title: Text('ダンジョンメニュー'),
+              children: <Widget>[
+                SimpleDialogOption(
+                  child: Text(
+                    "タイトルに戻る",
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  ),
+                  onPressed: () {
+                    _audio.play('select.mp3');
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                ),
+                SimpleDialogOption(
+                  child: Text("このメニューを閉じる"),
+                  onPressed: () {
+                    _audio.play('select.mp3');
+                    Navigator.pop(context);
+                    },
+                ),
+              ]
+          );
+        }
+    );
+    return res;
+  }
+
+
+  // クリア画面
+  Future<bool?> dungeon_clear(BuildContext context) async {
+    bool? res = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+              title: Text(
+                  'Dungeon Clear🎉',
+                  style: TextStyle(fontSize: 30),
+              ),
+              children: <Widget>[
+                SimpleDialogOption(
+                  child: Text(
+                    "まだ探索を続ける",
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                SimpleDialogOption(
+                  child: Text(
+                    "タイトルに戻る",
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    Navigator.pop(context);
+                  },
+                ),
+              ]
+          );
+        }
+    );
+    return res;
   }
 }

@@ -1,4 +1,7 @@
+import 'dungeon.dart';
 import 'content.dart';
+import 'package:audioplayers/audioplayers.dart';
+final _audio = AudioCache();
 
 class Pouch {
   // Itemオブジェクトを格納するクラス
@@ -19,6 +22,7 @@ class Pouch {
 
   // ポーチの中身同士をドラッグ＆ドロップで入れ替えるメソッド
   void swap(var cIndex, var rIndex) {
+    _audio.play('drop.mp3');
     final tmp = [...this.pouch];
     Item tmp_item = tmp[cIndex[0]][cIndex[1]];
     tmp[cIndex[0]][cIndex[1]] = tmp[rIndex[0]][rIndex[1]];
@@ -34,6 +38,7 @@ class Pouch {
         && this.pouch[cIndex[0]][cIndex[1]].status["item_id"]==this.pouch[rIndex[0]][rIndex[1]].status["item_id"]
         && this.pouch[rIndex[0]][rIndex[1]].status["level"] <= 10) {
       print("compositeメソッド発動！");
+      _audio.play('composite.mp3');
       final tmp = [...this.pouch];
       tmp[rIndex[0]][rIndex[1]].status["level"] += tmp[cIndex[0]][cIndex[1]].status["level"];
       tmp[rIndex[0]][rIndex[1]].status["attack"] += 1;
@@ -132,6 +137,7 @@ class Player extends Pouch {
   void composite_equipments(var equipment, var rIndex) {
     if(this.pouch[rIndex[0]][rIndex[1]].status["item_id"] == this.equipments["weapon"]!.status["item_id"]) {
       print("composite_equipmentsメソッド発動！");
+      _audio.play('composite.mp3');
       final tmp = [...this.pouch];
       int tmp_int = tmp[rIndex[0]][rIndex[1]].status["level"];
       this.equipments["weapon"]!.status["level"] = this.equipments["weapon"]!.status["level"]! + tmp_int;
