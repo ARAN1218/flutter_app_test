@@ -58,12 +58,6 @@ class Pouch {
     tmp[pouchIndex[0]][pouchIndex[1]] = Item(0);//Content("None", 0).content;
     this.pouch = tmp;
   }
-
-// ポーチの中身をタップして選択する時のメソッド
-// 選択中のアイテムを光らせたい
-// void select(int i, int j) {
-//
-// }
 }
 
 // プレイヤーのステータスを司るクラス
