@@ -15,9 +15,9 @@ class Pouch {
     this.pouch[0][0] = Item(100);
     this.pouch[0][1] = Item(200);
     this.pouch[0][2] = Item(300);
-    this.pouch[1][0] = Item(102);
-    this.pouch[1][1] = Item(152);
-    this.pouch[1][2] = Item(182);
+    // this.pouch[1][0] = Item(102);
+    // this.pouch[1][1] = Item(152);
+    // this.pouch[1][2] = Item(182);
   }
 
   // ポーチの中身同士をドラッグ＆ドロップで入れ替えるメソッド
@@ -32,12 +32,12 @@ class Pouch {
 
   // ポーチの武器同士をドラッグ＆ドロップで合成するメソッド
   void composite(var cIndex, var rIndex) {
-    print(cIndex);
-    print(rIndex);
+    // print(cIndex);
+    // print(rIndex);
     if((cIndex[0]!=rIndex[0] || cIndex[1]!=rIndex[1])
         && this.pouch[cIndex[0]][cIndex[1]].status["item_id"]==this.pouch[rIndex[0]][rIndex[1]].status["item_id"]
         && this.pouch[rIndex[0]][rIndex[1]].status["level"] <= 10) {
-      print("compositeメソッド発動！");
+      // print("compositeメソッド発動！");
       _audio.play('composite.mp3');
       final tmp = [...this.pouch];
       tmp[rIndex[0]][rIndex[1]].status["level"] += tmp[cIndex[0]][cIndex[1]].status["level"];
@@ -113,7 +113,7 @@ class Player extends Pouch {
 
   // 装備を外してポーチに入れるメソッド
   void exit_equipments(var equipment) {
-    print("exit_equipmentsメソッド発動！");
+    // print("exit_equipmentsメソッド発動！");
     for (int i = 0; i < 2; i++) {
       for (int j = 0; j < 5; j++) {
         if (this.pouch[i][j].status["item_id"] == 0) { // ポーチに空きがある時
@@ -130,7 +130,7 @@ class Player extends Pouch {
   // 装備をつけたまま合成するメソッド
   void composite_equipments(var equipment, var rIndex) {
     if(this.pouch[rIndex[0]][rIndex[1]].status["item_id"] == this.equipments["weapon"]!.status["item_id"]) {
-      print("composite_equipmentsメソッド発動！");
+      // print("composite_equipmentsメソッド発動！");
       _audio.play('composite.mp3');
       final tmp = [...this.pouch];
       int tmp_int = tmp[rIndex[0]][rIndex[1]].status["level"];

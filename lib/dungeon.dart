@@ -102,7 +102,7 @@ class Dungeon extends Content {
 
   // フィールド上のアイテムをポーチの中に入れるメソッド
   void get(int fi, int fj) {
-    print("getメソッド発動！");
+    // print("getメソッド発動！");
     for(int i=0; i<2; i++) {
       for(int j=0; j<5; j++) {
         if(this.player.pouch[i][j].status["item_id"] == 0) { // ポーチに空きがある時
@@ -116,12 +116,10 @@ class Dungeon extends Content {
 
   // モンスターの行動タイマーを進めるメソッド
   void timer_update() {
-    print("timer_updateメソッド発動！");
     for (int i = 0; i < dungeon.length; i++) {
       for (int j = 0; j < dungeon[i].length; j++) {
         if(this.content[i][j].type == "monster") { // モンスターをサーチ
           this.content[i][j].content.timer -= 1;
-
           if(this.dungeon[i][j] == -1 && this.content[i][j].content.timer == 0) { // 行動タイマーが0になった&パネルが空いている時
             this.content[i][j].content.attack(this);
             this.content[i][j].content.timer = this.content[i][j].content.status["speed"]; // 初期化

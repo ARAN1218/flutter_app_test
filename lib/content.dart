@@ -115,12 +115,12 @@ class Monster {
 
   // モンスターがダメージを受けるメソッド
   void damage(Dungeon dungeon, var ij, int damage) {
-    print("$name に $damage ダメージを与えた！");
+    // print("$name に $damage ダメージを与えた！");
     dungeon.addScore(min(this.status["HP"]!, damage));
     this.status["HP"] = (this.status["HP"]! - damage);
-    if(this.status["HP"]! <= 0) { // HPが0になった時
+    if(this.status["HP"]! <= 0) { // モンスターのHPが0になった時
       dungeon.content[ij[0]][ij[1]] = Content("None", 0);
-      print("$name をやっつけた！");
+      // print("$name をやっつけた！");
     } // else { // 自身の攻撃と合わせて攻撃させたいなら起動
     //   this.attack(dungeon);
     // }
@@ -131,7 +131,7 @@ class Monster {
     _audio.play('monster_attack.mp3');
     int damage = (this.status["attack"]! * (1-dungeon.player.status["defence"]!/100)).toInt();
     dungeon.player.status["HP"] = dungeon.player.status["HP"]! - damage;
-    print("$name は冒険者に $damage ダメージを与えた！");
+    // print("$name は冒険者に $damage ダメージを与えた！");
   }
 }
 

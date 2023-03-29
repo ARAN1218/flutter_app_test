@@ -39,13 +39,11 @@ class MyHomePage extends StatefulWidget {
 }
 
 class MyHomeState extends State<MyHomePage> {
+  String error_massage = "あなた好みにカスタマイズしましょう！";
   @override
   Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -72,7 +70,7 @@ class MyHomeState extends State<MyHomePage> {
                     builder: (context) => MyDungeonPage(title: 'Dungeon Creators', level: 10,)
                 ));
               },
-            ),
+            ), // 初級ダンジョン
             TextButton(
               child: Text(
                 "中級ダンジョン",
@@ -80,13 +78,11 @@ class MyHomeState extends State<MyHomePage> {
               ),
               onPressed: (){
                 _audio.play('select.mp3');
-                // （1） 指定した画面に遷移する
                 Navigator.push(context, MaterialPageRoute(
-                  // （2） 実際に表示するページ(ウィジェット)を指定する
                     builder: (context) => MyDungeonPage(title: 'Dungeon Creators', level: 20,)
                 ));
               },
-            ),
+            ), // 中級ダンジョン
             TextButton(
               child: Text(
                   "上級ダンジョン",
@@ -94,13 +90,31 @@ class MyHomeState extends State<MyHomePage> {
               ),
               onPressed: (){
                 _audio.play('select.mp3');
-                // （1） 指定した画面に遷移する
                 Navigator.push(context, MaterialPageRoute(
-                  // （2） 実際に表示するページ(ウィジェット)を指定する
                     builder: (context) => MyDungeonPage(title: 'Dungeon Creators', level: 30,)
                 ));
               },
-            ),
+            ), // 上級ダンジョン
+            TextButton(
+              child: Text(
+                "カスタムモード",
+                style: TextStyle(fontSize: 20),
+              ),
+              onPressed: () async{
+                _audio.play('select.mp3');
+                await Custom(context);
+              },
+            ), // カスタムモード
+            TextButton(
+              child: Text(
+                "ゲーム説明",
+                style: TextStyle(fontSize: 16),
+              ),
+              onPressed: () async{
+                _audio.play('select.mp3');
+                await Tutorial(context);
+              },
+            ), // ゲーム説明
 
             Spacer(),  // レスポンシブな空白
           ],
@@ -108,7 +122,114 @@ class MyHomeState extends State<MyHomePage> {
       ),
     );
   }
+
+
+  // カスタムモードモーダル
+  Future<bool?> Custom(BuildContext context) async {
+    final dateTextController = TextEditingController();
+    bool? res = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return StatefulBuilder(
+              builder: (BuildContext context, setState) {
+                return AlertDialog(
+            title: Text('カスタムモード'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '$error_massage',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.red,
+                  ),
+                ),
+                Text(
+                  '①階層数を入力してください(半角数字・1以上)',
+                  style: TextStyle(fontSize: 18),
+                ),
+                TextField(
+                  controller: dateTextController,
+                  decoration: InputDecoration(
+                    hintText: "階層数を入力してください(半角数字・1以上)",
+                  ),
+                  autofocus: true,
+                  keyboardType: TextInputType.number,
+                ),
+
+                const SizedBox(height: 10),
+
+                Text(
+                  '②未実装',
+                  style: TextStyle(fontSize: 18),
+                ),
+                Text('アイデア：手持ちの武器、落ちてるアイテムの確率等...'),
+              ],
+            ),
+            actions:
+              <Widget>[
+                TextButton(
+                  child: Text("スタート"),
+                  onPressed: () {
+                    _audio.play('select.mp3');
+                    int floor_num = int.parse(dateTextController.text, onError: (value) => -1);
+                    if(floor_num != null && floor_num >= 1) {
+                      setState(() {error_massage = "あなた好みにカスタマイズしましょう！";});
+                      Navigator.push(context, MaterialPageRoute(
+                          builder: (context) => MyDungeonPage(title: 'Dungeon Creators', level: floor_num,)
+                      ));
+                    }
+                    else {
+                      setState(() {error_massage = "正しく入力してください!";});
+                    }
+                  },
+                ),
+                TextButton(
+                  child: Text("キャンセル"),
+                  onPressed: () {
+                    _audio.play('select.mp3');
+                    setState(() {error_massage = "あなた好みにカスタマイズしましょう！";});
+                    Navigator.pop(context);
+                  },
+                ),
+              ]
+          );},);
+        }
+    );
+    return res;
+  }
+
+
+  // ゲーム説明モーダル
+  Future<bool?> Tutorial(BuildContext context) async {
+    bool? res = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+              title: Text('ゲーム説明'),
+              children: <Widget>[
+                SimpleDialogOption(
+                    child: Text(
+                      "最下層目指して頑張ってね〜",
+                  ),
+                ),
+                SimpleDialogOption(
+                  child: Text("このメニューを閉じる"),
+                  onPressed: () {
+                    _audio.play('select.mp3');
+                    Navigator.pop(context);
+                  },
+                ),
+              ]
+          );
+        }
+    );
+    return res;
+  }
 }
+
 
 
 // ダンジョンのページ
@@ -150,13 +271,14 @@ class DungeonState extends State<MyDungeonPage> {
   void _search(int i, int j, int target) {
     _audio.play('search.mp3');
     _TurnText++;
-    dungeon.timer_update();
+    _timer_update();
     setState(() {
       dungeon.search(i, j, target);
     });
   }
 
   void _proceedDungeon(int i, int j) {
+    _audio.play('search.mp3');
     setState(() {
       _FloorText++;
       _TurnText = 0;
@@ -165,11 +287,19 @@ class DungeonState extends State<MyDungeonPage> {
   }
 
   void _clearDungeon() {
-    _FloorText = 0;
+    _audio.play('search.mp3');
+    // _FloorText = 0;
     _TurnText = 0;
     setState(() {
       dungeon.clearDungeon();
     });
+  }
+
+  void _timer_update() {
+    dungeon.timer_update();
+    if(dungeon.player.status["HP"]! <= 0) { // プレイヤーのHPが0になった時
+      setState(() {dungeon_gameover(context);});
+    }
   }
 
 
@@ -178,10 +308,6 @@ class DungeonState extends State<MyDungeonPage> {
     final Size size = MediaQuery.of(context).size;
     int _MaxFloorText = widget.level;
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(widget.title),
-      //   toolbarHeight: 30,
-      // ),
       body: Center(
         // child: SingleChildScrollView(
         child: Column(
@@ -423,7 +549,7 @@ class DungeonState extends State<MyDungeonPage> {
           alignment: Alignment.center,
         ),
         onTap: () {
-          print("一回タップで反応したよ");
+          // print("一回タップで反応したよ");
           _audio.play('equip.mp3');
           setState(() {dungeon.player.exit_equipments(type);});
         },
@@ -474,7 +600,7 @@ class DungeonState extends State<MyDungeonPage> {
               if (dungeon.content[i][j].type == "monster") { // モンスターにタップした時
                 _audio.play('attack.mp3');
                 dungeon.content[i][j].content.damage(dungeon, [i, j], dungeon.player.status["attack"]);
-                dungeon.timer_update();
+                _timer_update();
               } else if (dungeon.content[i][j].content is Item && dungeon.content[i][j].content.status["type"] != 0) {
                 _audio.play('drop.mp3');
                 dungeon.get(i, j);
@@ -489,10 +615,9 @@ class DungeonState extends State<MyDungeonPage> {
       );
     },
     onAccept: (data) {
-      print(dungeon.content[i][j].type);
       if(dungeon.dungeon[i][j] == -1 && dungeon.content[i][j].type == "None") {
-        print(data);
-        print([i, j]);
+        // print(data);
+        // print([i, j]);
         setState(() {
           _audio.play('drop.mp3');
           dungeon.player.drop(dungeon, data, [i, j]);
@@ -534,7 +659,7 @@ class DungeonState extends State<MyDungeonPage> {
           _audio.play('select.mp3');
         },
         onDoubleTap: () {
-            print("二回タップされたよ");
+            // print("二回タップされたよ");
             if(dungeon.player.pouch[i][j].status["type"] == 100) { // 武器
               _audio.play('equip.mp3');
               setState(() {dungeon.player.equip_equipments("weapon", [i,j]);});
@@ -591,10 +716,11 @@ class DungeonState extends State<MyDungeonPage> {
     );
   }
 
-  // ダンジョンメニュー
+  // ダンジョンメニューモーダル
   Future<bool?> dungeon_menu(BuildContext context) async {
     bool? res = await showDialog<bool>(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return SimpleDialog(
               title: Text('ダンジョンメニュー'),
@@ -608,8 +734,7 @@ class DungeonState extends State<MyDungeonPage> {
                   ),
                   onPressed: () {
                     _audio.play('select.mp3');
-                    Navigator.pop(context);
-                    Navigator.pop(context);
+                    Navigator.popUntil(context, (route) => route.isFirst);
                   },
                 ),
                 SimpleDialogOption(
@@ -627,10 +752,12 @@ class DungeonState extends State<MyDungeonPage> {
   }
 
 
-  // クリア画面
+  // クリア画面モーダル
   Future<bool?> dungeon_clear(BuildContext context) async {
+    int score = dungeon.score;
     bool? res = await showDialog<bool>(
         context: context,
+        barrierDismissible: false,
         builder: (BuildContext context) {
           return SimpleDialog(
               title: Text(
@@ -638,6 +765,18 @@ class DungeonState extends State<MyDungeonPage> {
                   style: TextStyle(fontSize: 30),
               ),
               children: <Widget>[
+                SimpleDialogOption(
+                  child: Text(
+                    "あなたのスコア：$score",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.red,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
                 SimpleDialogOption(
                   child: Text(
                     "まだ探索を続ける",
@@ -651,8 +790,38 @@ class DungeonState extends State<MyDungeonPage> {
                     "タイトルに戻る",
                   ),
                   onPressed: () {
-                    Navigator.pop(context);
-                    Navigator.pop(context);
+                    Navigator.popUntil(context, (route) => route.isFirst);
+                  },
+                ),
+              ]
+          );
+        }
+    );
+    return res;
+  }
+
+
+  // ゲームオーバー画面モーダル
+  Future<bool?> dungeon_gameover(BuildContext context) async {
+    bool? res = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return SimpleDialog(
+              title: Text(
+                'Game Over...',
+                style: TextStyle(fontSize: 30),
+              ),
+              children: <Widget>[
+                SimpleDialogOption(
+                  child: Text(
+                    "タイトルに戻る",
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.popUntil(context, (route) => route.isFirst);
                   },
                 ),
               ]
