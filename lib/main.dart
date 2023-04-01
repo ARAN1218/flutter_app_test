@@ -211,12 +211,32 @@ class MyHomeState extends State<MyHomePage> {
               title: Text('ゲーム説明'),
               children: <Widget>[
                 SimpleDialogOption(
-                    child: Text(
-                      "最下層目指して頑張ってね〜",
+                  child: Text(
+                    "モンスターを退け、パネルをめくり、紫色の階段を見つけてダンジョンの奥に進もう！",
                   ),
                 ),
                 SimpleDialogOption(
-                  child: Text("このメニューを閉じる"),
+                  child: Text(
+                    "武器の下にある(1:30)のような表記の内、左が武器レベル、右が武器の耐久力を表している！同じ武器はドラッグ&ドロップで合成してレベルを上げて強化でき、耐久力がなくなると壊れてしまうぞ！",
+                  ),
+                ),
+                SimpleDialogOption(
+                  child: Text(
+                    "モンスターの下にある(2)のような数字は、モンスターが攻撃するまでの時間を表している！これが0になるとプレイヤーに攻撃してHPを減らしてくるぞ！その前にモンスターをタップして攻撃し、倒してしまおう！",
+                  ),
+                ),
+                SimpleDialogOption(
+                  child: Text(
+                    "最下層目指して頑張ってね〜",
+                  ),
+                ),
+                SimpleDialogOption(
+                  child: Text(
+                    "このメニューを閉じる",
+                    style: TextStyle(
+                      color: Colors.red,
+                    ),
+                  ),
                   onPressed: () {
                     _audio.play('select.mp3');
                     Navigator.pop(context);
@@ -318,6 +338,7 @@ class DungeonState extends State<MyDungeonPage> {
               height: size.height/6,
               child: status(
                 dungeon.player.status["HP"]!,
+                dungeon.player.status["SP"]!,
                 dungeon.player.status["attack"]!,
                 dungeon.player.status["defence"]!,
               ) // ステータスメニュー
@@ -435,7 +456,7 @@ class DungeonState extends State<MyDungeonPage> {
   }
 
   // ステータスメニュー
-  Container status(int HP, int atk, int def) =>
+  Container status(int HP, int SP, int atk, int def) =>
     Container(
       color: Colors.lightGreenAccent,
       child: Row(
@@ -451,7 +472,7 @@ class DungeonState extends State<MyDungeonPage> {
             children: <Widget>[
               Text(
                 'STATUS',
-                style: TextStyle(fontSize: 24),
+                style: TextStyle(fontSize: 20),
               ),
             ],
           ), // STATUS
@@ -460,28 +481,47 @@ class DungeonState extends State<MyDungeonPage> {
             children: <Widget>[
               Text(
                 'HP: $HP',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: dungeon.player.status["HP"]! < 20
+                    ? Colors.red
+                    : Colors.black,
+                ),
               ),
             ],
-          ), // 階層数
+          ), // HPの表示
+          Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: <Widget>[
+              Text(
+                'SP: $SP',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: dungeon.player.status["SP"]! < 20
+                      ? Colors.red
+                      : Colors.black,
+                ),
+              ),
+            ],
+          ), // ATKの表示
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Text(
                 'ATK: $atk',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 15),
               ),
             ],
-          ), // 経過ターン数
+          ), // ATKの表示
           Row(
             mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Text(
                 'DEF: $def',
-                style: TextStyle(fontSize: 18),
+                style: TextStyle(fontSize: 15),
               ),
             ],
-          )
+          ) // DEFの表示
         ],
           ),
           Spacer(),  // レスポンシブな空白
@@ -549,15 +589,20 @@ class DungeonState extends State<MyDungeonPage> {
           alignment: Alignment.center,
         ),
         onTap: () {
-          // print("一回タップで反応したよ");
           _audio.play('equip.mp3');
           setState(() {dungeon.player.exit_equipments(type);});
         },
       );
     },
-      onAccept: (data) {
+    onAccept: (data) {
+      final data_ = data as List;
+      if(dungeon.player.pouch[data_[0]][data_[1]].status["type"] == 200
+      && type == "weapon") {
+        setState(() {dungeon.player.cure_equipments(type, data);});
+      } else {
         setState(() {dungeon.player.composite_equipments(type, data);});
-      },
+      }
+    },
   );
 
   // 装備がついてない時のマス
@@ -659,7 +704,6 @@ class DungeonState extends State<MyDungeonPage> {
           _audio.play('select.mp3');
         },
         onDoubleTap: () {
-            // print("二回タップされたよ");
             if(dungeon.player.pouch[i][j].status["type"] == 100) { // 武器
               _audio.play('equip.mp3');
               setState(() {dungeon.player.equip_equipments("weapon", [i,j]);});
@@ -677,12 +721,28 @@ class DungeonState extends State<MyDungeonPage> {
       );
     },
     onAccept: (data) {
-      if(dungeon.player.pouch[i][j].status["type"]==100) { // 武器を武器にドラッグした時
-        setState(() {dungeon.player.composite(data, [i,j]);});
-      } else {
-        setState(() {dungeon.player.swap(data, [i,j]);});
-      }
-    },);
+      final data_ = data as List;
+      setState(() {
+        if(dungeon.player.pouch[data_[0]][data_[1]].status["type"]==100
+            && dungeon.player.pouch[i][j].status["type"]==100) { // 武器同士だった時
+          dungeon.player.composite(data, [i,j]);
+        } else if(dungeon.player.pouch[data_[0]][data_[1]].status["type"]==200 // 工具をドロップした時
+            && dungeon.player.pouch[i][j].status["type"]==100) {
+          dungeon.player.cure(data, [i,j]);
+        } else {
+          dungeon.player.swap(data, [i,j]);
+        }
+      });
+      // setState(() {dungeon.player.which(data, [i,j]);});
+      // if(dungeon.player.pouch[data_[0]][data_[1]].status["type"]==100) { // 武器を武器にドラッグした時
+      //   setState(() {dungeon.player.composite(data, [i,j]);});
+      // } else if(dungeon.player.pouch[data_[0]][data_[1]].status["type"]==200) {
+      //   setState(() {dungeon.player.cure(data, [i,j]);});
+      // } else {
+      //   setState(() {dungeon.player.swap(data, [i,j]);});
+      // }
+    },
+  );
 
   // アイテムが入っていないマスのポーチ
   DragTarget buildDragTarget(int i, int j) => new DragTarget(
@@ -755,6 +815,7 @@ class DungeonState extends State<MyDungeonPage> {
   // クリア画面モーダル
   Future<bool?> dungeon_clear(BuildContext context) async {
     int score = dungeon.score;
+    int floor = widget.level;
     bool? res = await showDialog<bool>(
         context: context,
         barrierDismissible: false,
@@ -767,15 +828,21 @@ class DungeonState extends State<MyDungeonPage> {
               children: <Widget>[
                 SimpleDialogOption(
                   child: Text(
+                    "到達階数：$floor",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+                SimpleDialogOption(
+                  child: Text(
                     "あなたのスコア：$score",
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.red,
                     ),
                   ),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
                 ),
                 SimpleDialogOption(
                   child: Text(

@@ -1,6 +1,8 @@
 import 'player.dart';
 import 'content.dart';
 import 'dart:math' as math;
+import 'package:audioplayers/audioplayers.dart';
+final _audio = AudioCache();
 var random = math.Random();
 final int GOAL = -999;
 
@@ -116,6 +118,17 @@ class Dungeon extends Content {
 
   // モンスターの行動タイマーを進めるメソッド
   void timer_update() {
+    // プレイヤーのSPを消費する
+    // SPが0の場合、HPが削られる
+    if(this.player.status["SP"]! == 1) {
+      _audio.play('hungry.mp3');
+    }
+    if(this.player.status["SP"]! > 0) {
+      this.player.status["SP"] = (this.player.status["SP"]!-1);
+    } else {
+      this.player.status["HP"] = (this.player.status["HP"]!-1);
+    }
+
     for (int i = 0; i < dungeon.length; i++) {
       for (int j = 0; j < dungeon[i].length; j++) {
         if(this.content[i][j].type == "monster") { // モンスターをサーチ
