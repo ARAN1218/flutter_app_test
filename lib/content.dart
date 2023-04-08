@@ -44,8 +44,8 @@ final Map<int, Map<String, int>> ITEM_ID_TO_STATUS = {
   181 : {"type" : 111, "rare" : 5, "defence" : 10, "command" : 0},
   182 : {"type" : 111, "rare" : 1, "defence" : 20, "command" : 0},
   200 : {"type" : 200, "rare" : 10, "command" : 0, "effect" : 10}, // 逐一確認して個別対応します...?
-  300 : {"type" : 300, "rare" : 5, "HP_effect" : 15, "SP_effect" : 10},
-  301 : {"type" : 300, "rare" : 5, "HP_effect" : 5, "SP_effect" : 25},
+  300 : {"type" : 300, "rare" : 7, "HP_effect" : 15, "SP_effect" : 10},
+  301 : {"type" : 300, "rare" : 7, "HP_effect" : 5, "SP_effect" : 25},
 };
 
 // アイテム抽選の抽選袋

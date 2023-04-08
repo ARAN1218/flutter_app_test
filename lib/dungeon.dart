@@ -59,7 +59,7 @@ class Dungeon extends Content {
 
   // ダンジョンをリセットする
   void clearDungeon() {
-    this.score = 0;
+    this.score = -9999;
     for (int i = 0; i < dungeon.length; i++) {
       for (int j = 0; j < dungeon[i].length; j++) {
         dungeon[i][j] = -1;
